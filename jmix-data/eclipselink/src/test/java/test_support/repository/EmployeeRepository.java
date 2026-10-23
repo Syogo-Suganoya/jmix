@@ -43,6 +43,11 @@ public interface EmployeeRepository extends JmixDataRepository<Employee, UUID> {
 
     List<Employee> findEmployeesByNameNotNullOrderByNameAsc(Sort sort);
 
+    List<Employee> findEmployeesByNameNotNullOrderByName(io.jmix.core.Sort sort);
+
+    @Query("select e from repository$Employee e where e.name is not null")
+    List<Employee> queryEmployeesByNameNotNull(io.jmix.core.Sort sort);
+
     @Query("select e from repository$Employee e where(e.name like ?1 or e.secondName like ?1 or e.lastName like ?2)")
     List<Employee> findEmployeesByNames(String nameOrSecondName, String thirdName);
 

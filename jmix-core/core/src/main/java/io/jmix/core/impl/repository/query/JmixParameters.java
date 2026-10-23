@@ -17,6 +17,7 @@
 package io.jmix.core.impl.repository.query;
 
 import io.jmix.core.FetchPlan;
+import io.jmix.core.Sort;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersSource;
@@ -25,18 +26,20 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * {@link Parameters} extension required to support {@link io.jmix.core.FetchPlan} and {@link JmixDataRepositoryContext}
- * special parameters.
+ * {@link Parameters} extension required to support {@link io.jmix.core.FetchPlan}, {@link JmixDataRepositoryContext}
+ * and {@link Sort} special parameters.
  */
 public class JmixParameters extends Parameters<JmixParameters, JmixParameter> {
 
     private final int fetchPlanIndex;
     private final int jmixContextIndex;
+    private final int jmixSortIndex;
 
     public JmixParameters(ParametersSource parametersSource) {
         super(parametersSource, JmixParameter::new);
         fetchPlanIndex = findParameterIndexByType(FetchPlan.class);
         jmixContextIndex = findParameterIndexByType(JmixDataRepositoryContext.class);
+        jmixSortIndex = findParameterIndexByType(Sort.class);
     }
 
     protected int findParameterIndexByType(Class<?> clazz) {
@@ -54,6 +57,7 @@ public class JmixParameters extends Parameters<JmixParameters, JmixParameter> {
         super(parameters);
         fetchPlanIndex = findParameterIndexByType(FetchPlan.class);
         jmixContextIndex = findParameterIndexByType(JmixDataRepositoryContext.class);
+        jmixSortIndex = findParameterIndexByType(Sort.class);
     }
 
     @Override
@@ -89,5 +93,20 @@ public class JmixParameters extends Parameters<JmixParameters, JmixParameter> {
      */
     public int getJmixContextIndex() {
         return jmixContextIndex;
+    }
+
+    /**
+     * @return whether {@link Sort} argument is present in the {@link Method}'s parameter list
+     */
+    public boolean hasJmixSortParameter() {
+        return jmixSortIndex != -1;
+    }
+
+    /**
+     * @return the index of the {@link Sort} {@link Method} parameter if available. Will return {@literal -1} if there is
+     * no {@link Sort} argument in the {@link Method}'s parameter list.
+     */
+    public int getJmixSortIndex() {
+        return jmixSortIndex;
     }
 }
