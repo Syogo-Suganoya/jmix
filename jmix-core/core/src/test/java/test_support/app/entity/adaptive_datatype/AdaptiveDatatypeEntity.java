@@ -23,6 +23,7 @@ import io.jmix.core.metamodel.annotation.JmixProperty;
 import io.jmix.core.metamodel.annotation.NumberFormat;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.UUID;
 
 @JmixEntity(name = "app_AdaptiveDatatypeEntity")
@@ -46,6 +47,12 @@ public class AdaptiveDatatypeEntity {
 
     @TestDisplayPrefix("low:")
     private String contested;
+
+    @NumberFormat(pattern = "#,##0", decimalSeparator = ".", groupingSeparator = ",")
+    private Short shortNumber;
+
+    @NumberFormat(pattern = "#,##0", decimalSeparator = ".", groupingSeparator = ",")
+    private BigInteger bigIntegerNumber;
 
     public UUID getId() {
         return id;
@@ -93,6 +100,22 @@ public class AdaptiveDatatypeEntity {
 
     public void setContested(String contested) {
         this.contested = contested;
+    }
+
+    public Short getShortNumber() {
+        return shortNumber;
+    }
+
+    public void setShortNumber(Short shortNumber) {
+        this.shortNumber = shortNumber;
+    }
+
+    public BigInteger getBigIntegerNumber() {
+        return bigIntegerNumber;
+    }
+
+    public void setBigIntegerNumber(BigInteger bigIntegerNumber) {
+        this.bigIntegerNumber = bigIntegerNumber;
     }
 
     @JmixProperty
