@@ -16,6 +16,7 @@
 
 package io.jmix.flowui.component.delegate;
 
+import com.vaadin.flow.component.AbstractField;
 import io.jmix.flowui.component.datetimepicker.TypedDateTimePicker;
 import io.jmix.flowui.data.DataAwareComponentsTools;
 import io.jmix.flowui.data.EntityValueSource;
@@ -49,6 +50,20 @@ public class DateTimePickerDelegate<V extends Comparable>
     @Override
     protected AbstractValueBinding<V> createValueBinding(ValueSource<V> valueSource) {
         return applicationContext.getBean(FieldValueBinding.class, valueSource, component);
+    }
+
+    /**
+     * {@link TypedDateTimePicker} has no input element of its own: the input is entered into the nested date and
+     * time pickers, so they are checked instead of the component itself.
+     */
+    @Override
+    protected boolean hasUnparseableInput() {
+        return component.getElement().getChildren()
+                .flatMap(element -> element.getComponent().stream())
+                .filter(child -> child instanceof AbstractField<?, ?>)
+                .map(child -> (AbstractField<?, ?>) child)
+                .anyMatch(picker -> picker.isEmpty()
+                        && picker.getElement().getProperty("_inputElementValue", false));
     }
 
     @Override
