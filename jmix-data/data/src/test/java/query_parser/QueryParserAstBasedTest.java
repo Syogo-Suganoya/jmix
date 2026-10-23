@@ -579,6 +579,59 @@ public class QueryParserAstBasedTest {
         assertEquals("tags", joinPath.getPropertyPath());
     }
 
+    @Test
+    void testLiteralMemberOfElementCollection() {
+        DomainModel model = prepareElementCollectionDomainModel();
+
+        QueryParserAstBased parser = new QueryParserAstBased(model,
+                "select e.name from First_ e where 'list3' member of e.strList");
+        assertEquals("First_", parser.getEntityName());
+        assertEquals("e", parser.getEntityAlias());
+
+        parser = new QueryParserAstBased(model,
+                "select e from First_ e where 'list3' not member of e.strList");
+        assertEquals("First_", parser.getEntityName());
+
+        parser = new QueryParserAstBased(model,
+                "select e from First_ e where 5 member of e.intList");
+        assertEquals("First_", parser.getEntityName());
+
+        QueryTransformerAstBased transformer = new QueryTransformerAstBased(model,
+                "select e from First_ e where 'list3' member of e.strList");
+        transformer.addWhere("{E}.name = :name");
+        assertEquals("select e from First_ e where ('list3' member of e.strList) and (e.name = :name)",
+                transformer.getResult());
+    }
+
+    @Test
+    void testJoinedElementCollectionVariableComparison() {
+        DomainModel model = prepareElementCollectionDomainModel();
+
+        QueryParserAstBased parser = new QueryParserAstBased(model,
+                "select e.name from First_ e join e.strList t where t = 'list1'");
+        assertEquals("First_", parser.getEntityName());
+        assertEquals("e", parser.getEntityAlias());
+
+        parser = new QueryParserAstBased(model,
+                "select e from First_ e join e.intList t where t > 5 and e.name <> 'a'");
+        assertEquals("First_", parser.getEntityName());
+
+        QueryTransformerAstBased transformer = new QueryTransformerAstBased(model,
+                "select e from First_ e join e.strList t where t = 'list1'");
+        transformer.addWhere("{E}.name = :name");
+        assertEquals("select e from First_ e join e.strList t where (t = 'list1') and (e.name = :name)",
+                transformer.getResult());
+    }
+
+    private DomainModel prepareElementCollectionDomainModel() {
+        EntityBuilder builder = EntityBuilder.create();
+        builder.startNewEntity("First_");
+        builder.addStringAttribute("name");
+        builder.addSingleValueAttribute(Collection.class, "strList");
+        builder.addSingleValueAttribute(Collection.class, "intList");
+        return new DomainModel(builder.produce());
+    }
+
     private DomainModel prepareDomainModel() {
         EntityBuilder builder = EntityBuilder.create();
         builder.startNewEntity("sec_GroupHierarchy");
