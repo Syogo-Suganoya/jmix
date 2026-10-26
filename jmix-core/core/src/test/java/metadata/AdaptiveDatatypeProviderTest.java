@@ -23,6 +23,7 @@ import io.jmix.core.metamodel.datatype.AdaptiveDatatypeProvider;
 import io.jmix.core.metamodel.datatype.Datatype;
 import io.jmix.core.metamodel.datatype.impl.AdaptiveNumberDatatype;
 import io.jmix.core.metamodel.model.MetaProperty;
+import io.jmix.core.security.SystemAuthenticator;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import test_support.addon1.TestAddon1Configuration;
 import test_support.app.TestAppConfiguration;
 import test_support.app.entity.adaptive_datatype.AdaptiveDatatypeEntity;
 import test_support.app.entity.adaptive_datatype.TestDisplayPrefix;
+import test_support.base.TestBaseConfiguration;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -50,13 +52,16 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {CoreConfiguration.class, TestAddon1Configuration.class, TestAppConfiguration.class,
-        AdaptiveDatatypeProviderTest.TestProvidersConfiguration.class})
+@ContextConfiguration(classes = {CoreConfiguration.class, TestBaseConfiguration.class, TestAddon1Configuration.class,
+        TestAppConfiguration.class, AdaptiveDatatypeProviderTest.TestProvidersConfiguration.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class AdaptiveDatatypeProviderTest {
 
     @Autowired
     Metadata metadata;
+
+    @Autowired
+    SystemAuthenticator systemAuthenticator;
 
     @Test
     void adaptiveDatatypeProvider_annotatedField_providesPropertyDatatype() {
@@ -116,8 +121,11 @@ public class AdaptiveDatatypeProviderTest {
     void numberFormat_shortProperty_outOfRangeValueIsRejected() {
         Datatype<?> datatype = getDatatype("shortNumber");
 
-        assertThrows(ParseException.class, () -> datatype.parse("32,768"));
-        assertThrows(ParseException.class, () -> datatype.parse("-32,769"));
+        // The range error message is localized for the current user, so an authentication is required
+        systemAuthenticator.runWithSystem(() -> {
+            assertThrows(ParseException.class, () -> datatype.parse("32,768"));
+            assertThrows(ParseException.class, () -> datatype.parse("-32,769"));
+        });
     }
 
     @Test
