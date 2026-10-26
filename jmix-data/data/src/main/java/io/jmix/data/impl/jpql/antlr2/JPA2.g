@@ -342,6 +342,9 @@ entity_or_value_expression
 simple_entity_or_value_expression
     : identification_variable
     | input_parameter
+    | string_literal
+    | decimal_literal
+    | numeric_literal
     | literal;
 exists_expression
     : ('NOT')? 'EXISTS' subquery;
@@ -354,7 +357,8 @@ comparison_expression
     | datetime_expression comparison_operator (datetime_expression | all_or_any_expression)
     | entity_expression ('=' | '<>') (entity_expression | all_or_any_expression)
     | entity_type_expression ('=' | '<>') entity_type_expression
-    | arithmetic_expression comparison_operator (arithmetic_expression | all_or_any_expression);
+    | arithmetic_expression comparison_operator (arithmetic_expression | all_or_any_expression)
+    | identification_variable comparison_operator (string_expression | arithmetic_expression | datetime_expression | boolean_expression | enum_expression);
 
 comparison_operator
     : '='
