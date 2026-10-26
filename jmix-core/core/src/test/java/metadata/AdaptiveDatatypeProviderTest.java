@@ -23,6 +23,7 @@ import io.jmix.core.metamodel.datatype.AdaptiveDatatypeProvider;
 import io.jmix.core.metamodel.datatype.Datatype;
 import io.jmix.core.metamodel.datatype.impl.AdaptiveNumberDatatype;
 import io.jmix.core.metamodel.model.MetaProperty;
+import io.jmix.core.security.SystemAuthenticator;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -38,22 +39,29 @@ import test_support.addon1.TestAddon1Configuration;
 import test_support.app.TestAppConfiguration;
 import test_support.app.entity.adaptive_datatype.AdaptiveDatatypeEntity;
 import test_support.app.entity.adaptive_datatype.TestDisplayPrefix;
+import test_support.base.TestBaseConfiguration;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.text.ParseException;
 import java.util.Locale;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {CoreConfiguration.class, TestAddon1Configuration.class, TestAppConfiguration.class,
-        AdaptiveDatatypeProviderTest.TestProvidersConfiguration.class})
+@ContextConfiguration(classes = {CoreConfiguration.class, TestBaseConfiguration.class, TestAddon1Configuration.class,
+        TestAppConfiguration.class, AdaptiveDatatypeProviderTest.TestProvidersConfiguration.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class AdaptiveDatatypeProviderTest {
 
     @Autowired
     Metadata metadata;
+
+    @Autowired
+    SystemAuthenticator systemAuthenticator;
 
     @Test
     void adaptiveDatatypeProvider_annotatedField_providesPropertyDatatype() {
@@ -97,6 +105,38 @@ public class AdaptiveDatatypeProviderTest {
         Datatype<?> datatype = getDatatype("contested");
 
         assertEquals("high:abc", datatype.format("abc"));
+    }
+
+    @Test
+    void numberFormat_shortProperty_parsesToShort() throws ParseException {
+        Datatype<?> datatype = getDatatype("shortNumber");
+
+        assertInstanceOf(AdaptiveNumberDatatype.class, datatype);
+        assertEquals((short) 1234, datatype.parse("1,234"));
+        assertEquals((short) 1234, datatype.parse("1,234", Locale.ENGLISH));
+        assertEquals("1,234", datatype.format((short) 1234));
+    }
+
+    @Test
+    void numberFormat_shortProperty_outOfRangeValueIsRejected() {
+        Datatype<?> datatype = getDatatype("shortNumber");
+
+        // The range error message is localized for the current user, so an authentication is required
+        systemAuthenticator.runWithSystem(() -> {
+            assertThrows(ParseException.class, () -> datatype.parse("32,768"));
+            assertThrows(ParseException.class, () -> datatype.parse("-32,769"));
+        });
+    }
+
+    @Test
+    void numberFormat_bigIntegerProperty_parsesToBigInteger() throws ParseException {
+        Datatype<?> datatype = getDatatype("bigIntegerNumber");
+
+        assertInstanceOf(AdaptiveNumberDatatype.class, datatype);
+        assertEquals(new BigInteger("12345678901234567890"), datatype.parse("12,345,678,901,234,567,890"));
+        assertEquals(new BigInteger("12345678901234567890"),
+                datatype.parse("12,345,678,901,234,567,890", Locale.ENGLISH));
+        assertEquals("12,345,678,901,234,567,890", datatype.format(new BigInteger("12345678901234567890")));
     }
 
     private Datatype<?> getDatatype(String propertyName) {

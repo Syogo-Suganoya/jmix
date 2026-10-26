@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
@@ -82,9 +83,10 @@ public class AdaptiveNumberDatatype extends NumberDatatype implements Datatype<N
     }
 
     protected void setupFormat(java.text.NumberFormat numberFormat) {
-        if (type.equals(BigDecimal.class) && numberFormat instanceof DecimalFormat)
+        if ((type.equals(BigDecimal.class) || type.equals(BigInteger.class)) && numberFormat instanceof DecimalFormat)
             ((DecimalFormat) numberFormat).setParseBigDecimal(true);
-        if (type.equals(Integer.class) || type.equals(Long.class))
+        if (type.equals(Short.class) || type.equals(Integer.class) || type.equals(Long.class)
+                || type.equals(BigInteger.class))
             numberFormat.setParseIntegerOnly(true);
     }
 
@@ -128,6 +130,8 @@ public class AdaptiveNumberDatatype extends NumberDatatype implements Datatype<N
     }
 
     protected Number requestedType(Number number) {
+        if (type.equals(Short.class))
+            return number.shortValue();
         if (type.equals(Integer.class))
             return number.intValue();
         if (type.equals(Long.class))
@@ -136,14 +140,25 @@ public class AdaptiveNumberDatatype extends NumberDatatype implements Datatype<N
             return number.doubleValue();
         if (type.equals(Float.class))
             return number.floatValue();
+        if (type.equals(BigInteger.class))
+            return number instanceof BigDecimal ? ((BigDecimal) number).toBigInteger() : BigInteger.valueOf(number.longValue());
         return number;
     }
 
     protected void checkRange(@Nullable String value, Number number) throws ParseException {
-        if (type.equals(Integer.class))
+        if (type.equals(Short.class))
+            checkShortRange(value, number);
+        else if (type.equals(Integer.class))
             checkIntegerRange(value, number);
         else if (type.equals(Long.class))
             checkLongRange(value, number);
+    }
+
+    protected void checkShortRange(String value, Number result) throws ParseException {
+        if ((result instanceof Long || result instanceof Double)
+                && (result.doubleValue() > Short.MAX_VALUE || result.doubleValue() < Short.MIN_VALUE))
+            throw new ParseException(messages.formatMessage(
+                    "", "datatype.shortOutOfRange.message", value), 0);
     }
 
     protected void checkIntegerRange(String value, Number result) throws ParseException {
