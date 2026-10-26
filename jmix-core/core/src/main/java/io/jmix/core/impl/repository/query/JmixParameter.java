@@ -17,13 +17,15 @@
 package io.jmix.core.impl.repository.query;
 
 import io.jmix.core.FetchPlan;
+import io.jmix.core.Sort;
 import io.jmix.core.repository.JmixDataRepositoryContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.repository.query.Parameter;
 
 /**
- * {@link Parameter} extension required to support {@link io.jmix.core.FetchPlan} special parameter.
+ * {@link Parameter} extension required to support {@link io.jmix.core.FetchPlan}, {@link JmixDataRepositoryContext}
+ * and {@link Sort} special parameters.
  */
 public class JmixParameter extends Parameter {
 
@@ -35,6 +37,7 @@ public class JmixParameter extends Parameter {
     public boolean isSpecialParameter() {
         return super.isSpecialParameter()
                 || FetchPlan.class.isAssignableFrom(getType())
-                || JmixDataRepositoryContext.class.isAssignableFrom(getType());
+                || JmixDataRepositoryContext.class.isAssignableFrom(getType())
+                || Sort.class.isAssignableFrom(getType());
     }
 }

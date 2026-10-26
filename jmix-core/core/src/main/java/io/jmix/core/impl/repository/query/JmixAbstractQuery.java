@@ -62,6 +62,7 @@ public abstract class JmixAbstractQuery<T extends DataLoadContext> implements Re
 
 
     protected int sortIndex;
+    protected int jmixSortIndex;
     protected int pageableIndex;
     protected int jmixContextIndex;
 
@@ -105,6 +106,7 @@ public abstract class JmixAbstractQuery<T extends DataLoadContext> implements Re
 
         pageableIndex = parameters.getPageableIndex();
         sortIndex = parameters.getSortIndex();
+        jmixSortIndex = parameters.getJmixSortIndex();
         jmixContextIndex = parameters.getJmixContextIndex();
     }
 
@@ -114,6 +116,9 @@ public abstract class JmixAbstractQuery<T extends DataLoadContext> implements Re
         if (sortIndex != -1) {
             orders.addAll(LoaderHelper.springToJmixSort((org.springframework.data.domain.Sort) parameters[sortIndex])
                     .getOrders());
+        }
+        if (jmixSortIndex != -1 && parameters[jmixSortIndex] != null) {
+            orders.addAll(((io.jmix.core.Sort) parameters[jmixSortIndex]).getOrders());
         }
         if (pageableIndex != -1) {
             orders.addAll(LoaderHelper.springToJmixSort(((Pageable) parameters[pageableIndex]).getSort()).getOrders());
@@ -197,6 +202,7 @@ public abstract class JmixAbstractQuery<T extends DataLoadContext> implements Re
     }
 
     protected String getQueryDescription() {
-        return String.format("jmixArgsIndex:'%s'; sortIndex:'%s'; pageableIndex:'%s'", jmixContextIndex, sortIndex, pageableIndex);
+        return String.format("jmixArgsIndex:'%s'; sortIndex:'%s'; jmixSortIndex:'%s'; pageableIndex:'%s'",
+                jmixContextIndex, sortIndex, jmixSortIndex, pageableIndex);
     }
 }

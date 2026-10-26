@@ -306,6 +306,46 @@ class MiscDataRepositoriesTest extends DataSpec {
 
     }
 
+    void "check sort by io.jmix.core.Sort parameter"() {
+        setup:
+        Employee e1 = employeeRepository.create()
+        e1.name = "1"
+        e1.secondName = "2"
+
+        Employee e2 = employeeRepository.create()
+        e2.name = "1"
+        e2.secondName = "1"
+
+        Employee e3 = employeeRepository.create()
+        e3.name = "2"
+        e3.secondName = "3"
+
+        dataManager.save(e1, e2, e3)
+
+        when: "derived query: static sort first, then sort from parameter"
+        List<Employee> results = employeeRepository.findEmployeesByNameNotNullOrderByName(
+                io.jmix.core.Sort.by(io.jmix.core.Sort.Direction.DESC, "secondName"))
+
+        then:
+        results == [e1, e2, e3]
+
+        when: "query from annotation"
+        results = employeeRepository.queryEmployeesByNameNotNull(
+                io.jmix.core.Sort.by(io.jmix.core.Sort.Direction.DESC, "secondName"))
+
+        then:
+        results == [e3, e1, e2]
+
+        when: "unsorted"
+        results = employeeRepository.queryEmployeesByNameNotNull(io.jmix.core.Sort.UNSORTED)
+
+        then:
+        results.size() == 3
+
+        cleanup:
+        dataManager.remove(e1, e2, e3)
+    }
+
     void "check repeated parameters in query"() {
         setup:
         Employee e1 = employeeRepository.create();
